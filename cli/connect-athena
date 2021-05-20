@@ -3,7 +3,7 @@
 # VARIABLES
 PROJECT=athena
 USER=ubuntu
-IP=$2
+IP=$1
 
 # MAIN
 if [ $PROJECT == "athena" ]; then

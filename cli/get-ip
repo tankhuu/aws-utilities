@@ -32,7 +32,6 @@ def handler(siteName, type: str = '', profile: str = 'default'):
       rs = resp.get('Reservations')
       if rs:
         instances = rs[0].get('Instances')
-        print(instances)
         if instances:
           for i in instances:
             ips.append(i.get('PrivateIpAddress'))
