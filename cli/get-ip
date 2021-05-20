@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+from fire import Fire
+import boto3
+from botocore.config import Config
+
+def connect(service: str = 'ec2', profile: str = 'default', region: str = 'us-east-2'):
+  try:
+    config = Config(region_name=region)
+    session = boto3.Session(profile_name=profile)
+
+    return session.client(service, config=config)
+  except Exception as err:
+    print('connect.error', err)
+    raise err
+
+def handler(siteName, type: str = '', profile: str = 'default'):
+  try:
+    ips = []
+    if profile and profile != 'default':
+      ec2 = connect(profile=profile)
+    else:
+      ec2 = connect()
+    filters = [
+      {'Name': 'tag:project', 'Values': ['athena']},
+      {'Name': 'tag:tenant', 'Values': [siteName]}
+    ]
+    if type != '':
+      filters.append({'Name': 'tag:tenant', 'Values': [type]})
+
+    resp = ec2.describe_instances(Filters=filters)
+    if resp:
+      rs = resp.get('Reservations')
+      if rs:
+        instances = rs[0].get('Instances')
+        print(instances)
+        if instances:
+          for i in instances:
+            ips.append(i.get('PrivateIpAddress'))
+    print(ips)
+  except Exception as err:
+    print('handler.error', err)
+    raise err
+
+# Test
+if __name__ == '__main__':
+  Fire(handler)
