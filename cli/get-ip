@@ -2,6 +2,7 @@
 from fire import Fire
 import boto3
 from botocore.config import Config
+import json
 
 def connect(service: str = 'ec2', profile: str = 'default', region: str = 'us-east-2'):
   try:
@@ -13,9 +14,19 @@ def connect(service: str = 'ec2', profile: str = 'default', region: str = 'us-ea
     print('connect.error', err)
     raise err
 
+def getInstanceName(instance):
+  name = ''
+  tags = instance.get('Tags')
+  if tags:
+    for t in tags:
+      if t['Key'] == 'Name':
+        name = t['Value']
+
+  return name
+
 def handler(siteName, type: str = '', profile: str = 'default'):
   try:
-    ips = []
+    ips = {}
     if profile and profile != 'default':
       ec2 = connect(profile=profile)
     else:
@@ -25,17 +36,20 @@ def handler(siteName, type: str = '', profile: str = 'default'):
       {'Name': 'tag:tenant', 'Values': [siteName]}
     ]
     if type != '':
-      filters.append({'Name': 'tag:tenant', 'Values': [type]})
-
+      filters.append({'Name': 'tag:type', 'Values': [type]})
+    # print(filters)
     resp = ec2.describe_instances(Filters=filters)
     if resp:
       rs = resp.get('Reservations')
       if rs:
-        instances = rs[0].get('Instances')
-        if instances:
-          for i in instances:
-            ips.append(i.get('PrivateIpAddress'))
-    print(ips)
+        for r in rs:
+          instances = r.get('Instances')
+          if instances:
+            for i in instances:
+              name = getInstanceName(i)
+              ips[name] = i.get('PrivateIpAddress')
+    for i in ips:
+      print(i, ips[i])
   except Exception as err:
     print('handler.error', err)
     raise err
