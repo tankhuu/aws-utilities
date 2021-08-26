@@ -26,7 +26,7 @@ def getInstanceName(instance):
 
 def handler(siteName, type: str = '', profile: str = 'default'):
   try:
-    ips = {}
+    ids = {}
     if profile and profile != 'default':
       ec2 = connect(profile=profile)
     else:
@@ -47,9 +47,9 @@ def handler(siteName, type: str = '', profile: str = 'default'):
           if instances:
             for i in instances:
               name = getInstanceName(i)
-              ips[name] = i.get('PrivateIpAddress')
-    for i in ips:
-      print(i, ips[i])
+              ids[name] = i.get('InstanceId')
+    for i in ids:
+      print(i, ids[i])
   except Exception as err:
     print('handler.error', err)
     raise err
